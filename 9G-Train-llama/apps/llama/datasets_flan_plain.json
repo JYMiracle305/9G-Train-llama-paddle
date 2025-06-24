@@ -1,0 +1,12 @@
+[
+    {
+        "dataset_name": "flan_plain",
+        "task_name": "instruction",
+        "weight": 1.0,
+        "path": "./flan_plain_0809/data",
+        "incontext_weight": [
+            1.0
+        ],
+        "transforms": "./flan_plain_0809/transform_data.py"
+    }
+]

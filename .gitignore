@@ -1,0 +1,6 @@
+*.log
+**/llama/log/
+__pycache__/
+*.pyc
+**/log/tensorboard/
+**/tmp/
