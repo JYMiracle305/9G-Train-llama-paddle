@@ -3,10 +3,10 @@
         "dataset_name": "bin_data_repeat",
         "task_name": "instruction",
         "weight": 1.0,
-        "path": "/home/jiyiming/code/BMTrain_paddle_Project/9G-Train-llama/metadata/quick_start/bin_data_repeat",
+        "path": "../../data/metadata/quick_start/bin_data_repeat",
         "incontext_weight": [
             1.0
         ],
-        "transforms": "/home/jiyiming/code/BMTrain_paddle_Project/9G-Train-llama/metadata/quick_start/transform_data.py"
+        "transforms": "../../data/metadata/quick_start/transform_data.py"
     }
 ]

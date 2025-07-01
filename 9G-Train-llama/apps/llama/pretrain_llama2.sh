@@ -3,12 +3,14 @@
 export MASTER_ADDR="localhost"
 export MASTER_PORT=$(shuf -i 20000-65000 -n 1)
 
-export PROJECT_ROOT="/home/jiyiming/code/BMTrain_paddle_Project"
+SCRIPT_DIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+export PROJECT_ROOT="$(dirname "$SCRIPT_DIR")/.."
+echo "当前目录为：{$PROJECT_ROOT}"
 
 #CPM_PATH="./9G-Train"
 #CKPT_PATH=/data/public/opensource_models/meta-llama/Llama-2-7b-cpm9g
-CPM_PATH="${PROJECT_ROOT}/9G-Train-llama"
-CKPT_PATH="${PROJECT_ROOT}/9G-Train-llama/metadata/Llama-2-7b-cpm9g"
+CPM_PATH="${PROJECT_ROOT}"
+CKPT_PATH="${PROJECT_ROOT}/data/metadata/Llama-2-7b-cpm9g"
 EXP_PATH=.
 MODEL_NAME="llama2-7b-train"
 
@@ -54,8 +56,8 @@ export CUDA_LAUNCH_BLOCKING=1
 # export LD_LIBRARY_PATH=$NCCL_HOME/lib:$LD_LIBRARY_PATH
 # export LD_PRELOAD=$NCCL_HOME/lib/libnccl.so.2
 CMD="python -m paddle.distributed.launch \
-        --nnodes=1 --nproc_per_node=2 --rdzv_id=1 --rdzv_backend=c10d --rdzv_endpoint=${MASTER_ADDR}:${MASTER_PORT}
-        --gpus=8,9  \
+        --nnodes=1 --nproc_per_node=1 --rdzv_id=1 --rdzv_backend=c10d --rdzv_endpoint=${MASTER_ADDR}:${MASTER_PORT}
+        --gpus=0  \
         ${CPM_PATH}/apps/llama/pretrain_llama.py ${OPTS}"
 echo "${CMD}"
 #nohup $CMD > incremental_train.4_4096_FA_bf16.lee.log 2>&1 &
