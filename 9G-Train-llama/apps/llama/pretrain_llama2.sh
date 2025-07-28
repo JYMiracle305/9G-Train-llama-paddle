@@ -41,7 +41,7 @@ OPTS+=" --start-step 1"
 OPTS+=" --save-iters 25000"
 
 OPTS+=" --batch-size 4"
-OPTS+=" --lr 1e-4"
+OPTS+=" --lr 1e-5"
 
 OPTS+=" $@"
 
@@ -56,8 +56,8 @@ export CUDA_LAUNCH_BLOCKING=1
 # export LD_LIBRARY_PATH=$NCCL_HOME/lib:$LD_LIBRARY_PATH
 # export LD_PRELOAD=$NCCL_HOME/lib/libnccl.so.2
 CMD="python -m paddle.distributed.launch \
-        --nnodes=1 --nproc_per_node=1 --rdzv_id=1 --rdzv_backend=c10d --rdzv_endpoint=${MASTER_ADDR}:${MASTER_PORT}
-        --gpus=0  \
+        --nnodes=1 --nproc_per_node=2 --rdzv_id=1 --rdzv_backend=c10d --rdzv_endpoint=${MASTER_ADDR}:${MASTER_PORT}
+        --gpus=8,9  \
         ${CPM_PATH}/apps/llama/pretrain_llama.py ${OPTS}"
 echo "${CMD}"
 #nohup $CMD > incremental_train.4_4096_FA_bf16.lee.log 2>&1 &

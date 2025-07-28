@@ -14,7 +14,7 @@ from typing import Union
 import bmtrain_paddle as bmt
 import paddle
 
-sys.path.insert(0, "/home/jiyiming/code/BMTrain_paddle_Project/9G-Train-llama")
+sys.path.insert(0, "/home/jiyiming/code/BMTrain_paddle_9G/9G-Train-llama")
 from cpm.arguments import get_args
 from cpm.llama.models import Llama
 from cpm.llama.models import LlamaConfig
@@ -416,9 +416,8 @@ def pretrain(
 
     global_token_pass = 0.0
     global_world_size = bmt.world_size()
-    print("start pretrain3   ", global_world_size)
+
     dataloader = MixedDataset(args.dataset, args.batch_size, args.max_length, tokenizer, unpad=(args.flash == "cuda"))
-    print("start pretrain 44")
     if args.load is not None:
         dataset_states_path = args.load.replace(".pt", ".data")
         if os.path.exists(dataset_states_path):
@@ -442,18 +441,17 @@ def pretrain(
         hash = {}
         for iteration, data in enumerate(dataloader):
             iteration = iteration + start_step + 1
-            # print("----------------", data["inputs"], data["length"])
-            # print("data['inputs'].shape:", data["inputs"].shape)
+            print("----------------", data["inputs"], data["length"])
+            print("data['inputs'].shape:", data["inputs"].shape)
             input_ids = paddle.to_tensor(data["inputs"], dtype=paddle.int32).cuda()
             # print("input_ids ", input_ids[:10])
             input_length = paddle.to_tensor(data["length"], dtype=paddle.int32).cuda()
             targets = paddle.to_tensor(data["target"], dtype=paddle.int32).cuda()
-            # print("targets shape:", targets.shape)  # 打印张量的形状
+            print("targets shape:", targets.shape)  # 打印张量的形状
             # print("targets length:", len(targets))
             # print("------------targets--------------", targets[0, 5000:5101].numpy())
             task_ids = paddle.to_tensor(data["task_ids"], dtype=paddle.int32).cuda()
             task_names = data["task_names"]
-            print("========================OKKKK1======================")
             #lsd.update_data(data["raw_data"])
             if args.flash == "cuda":
                 cu_seqlens = paddle.to_tensor(data["cu_seqlens"], dtype=paddle.int32).cuda()
@@ -463,7 +461,7 @@ def pretrain(
                 input_ids = paddle.to_tensor(data["inputs"], dtype=paddle.int32).cuda()
                 input_context = paddle.zeros_like(input_ids).cuda().bool()
                 input_span = paddle.to_tensor(data["spans"], dtype=paddle.int32).cuda()
-            print("========================OKKKK2======================")
+
             # ===========
             optim_manager.zero_grad()
             # torch.cuda.empty_cache()
@@ -472,7 +470,7 @@ def pretrain(
             mem_usage, tim_usage = add_mem_time("init", mem_usage, tim_usage)
 
             # bmt.print_rank(torch.cuda.max_memory_allocated())
-            print("========================OKKKK3======================")
+
             # ===========
             if args.flash == "cuda":
                 # print("param 1 ", input_ids, cu_seqlens, max_seqlen, position_ids)
@@ -508,7 +506,7 @@ def pretrain(
 
             #tmp_cpu = loss.cpu().detach()
             #havNan = np.isnan(np.array(tmp_cpu)).any() 
-            bmt.print_rank("Iter: {} | logits: {} | loss: {} ".format(iteration, logits, loss))
+            # bmt.print_rank("Iter: {} | logits: {} | loss: {} ".format(iteration, logits, loss))
 
             global_loss = bmt.sum_loss(loss).item()
             mem_usage, tim_usage = add_mem_time("forward", mem_usage, tim_usage)
@@ -531,40 +529,38 @@ def pretrain(
             mem_usage, tim_usage = add_mem_time("optim", mem_usage, tim_usage)
             # bmt.print_rank(torch.cuda.max_memory_allocated())
             gradient_records = {}
-            for name, param in model.named_parameters():
+            # for name, param in model.named_parameters():
                 
-                if param.grad is not None:
-                    if paddle.isnan(param.grad).any() or paddle.isinf(param.grad).any():
-                        print(f"⚠️ 异常梯度: {name}")
-                    grad_norm_1 = paddle.norm(param.grad.astype(paddle.float32)).item()
-                    gradient_records[name] = grad_norm_1
-                    if grad_norm_1 > 100:  # 梯度爆炸阈值
-                        print(f"💥 爆炸层: {name} | 梯度范数: {grad_norm_1:.2e}")
-                    # for name, norm in gradient_records.items():
-                    #     print(f"{name}: {norm:.2f}")
+            #     if param.grad is not None:
+            #         if paddle.isnan(param.grad).any() or paddle.isinf(param.grad).any():
+            #             print(f"⚠️ 异常梯度: {name}")
+            #         grad_norm_1 = paddle.norm(param.grad.astype(paddle.float32)).item()
+            #         gradient_records[name] = grad_norm_1
+            #         if grad_norm_1 > 100:  # 梯度爆炸阈值
+            #             print(f"💥 爆炸层: {name} | 梯度范数: {grad_norm_1:.2e}")
 
             print("========================OKKKK5======================")
 
-            if iteration % 50 == 0:  # 每50步检查一次
-                # 基本调用
-                logits_stats = analyze_logits_anomaly(logits)
+            # if iteration % 50 == 0:  # 每50步检查一次
+            #     # 基本调用
+            #     logits_stats = analyze_logits_anomaly(logits)
                 
-                # 当检测到危险值时详细记录
-                if logits_stats["dangerous_ratio"] > 0:
-                    print(f"检测到异常值! 位置: {logits_stats['max_position']}, 值: {logits_stats['max_value']:.2f}")
-                    # 详细报告
-                    analyze_logits_anomaly(logits, verbose=True)
+            #     # 当检测到危险值时详细记录
+            #     if logits_stats["dangerous_ratio"] > 0:
+            #         print(f"检测到异常值! 位置: {logits_stats['max_position']}, 值: {logits_stats['max_value']:.2f}")
+            #         # 详细报告
+            #         analyze_logits_anomaly(logits, verbose=True)
 
-            if iteration % 50 == 0:
-                # 假设logits形状为 [1, 16384, 32000]
-                logits = logits.squeeze(0)  # 移除batch维度 -> [16384, 32000]
+            # if iteration % 50 == 0:
+            #     # 假设logits形状为 [1, 16384, 32000]
+            #     logits = logits.squeeze(0)  # 移除batch维度 -> [16384, 32000]
 
-                # 找出每列(每个vocab)的最大值
-                col_max = logits.max(axis=0)  # [32000]
-                abnormal_cols = paddle.where(col_max > 5.0)[0]  # 阈值根据情况调整
+            #     # 找出每列(每个vocab)的最大值
+            #     col_max = logits.max(axis=0)  # [32000]
+            #     abnormal_cols = paddle.where(col_max > 5.0)[0]  # 阈值根据情况调整
 
-                print(f"异常词汇ID: {abnormal_cols.tolist()[:10]}")  # 打印前10个异常词
-                print(f"对应最大值: {col_max[abnormal_cols].tolist()[:10]}")
+            #     print(f"异常词汇ID: {abnormal_cols.tolist()[:10]}")  # 打印前10个异常词
+            #     print(f"对应最大值: {col_max[abnormal_cols].tolist()[:10]}")
             # 获取关键参数
             # key_params = {
             #     "input_embedding": model.input_embedding.weight,
@@ -739,8 +735,8 @@ def main():
     bmt.print_rank(json.dumps(vars(args), indent=2, sort_keys=True))
     tokenizer, model, optimizer, lr_scheduler = setup_model_and_optimizer(args)
     bmt.print_rank("finish loading")
-    register_activation_hooks(model)
-    bmt.print_rank("钩子注册成功")
+    # register_activation_hooks(model)
+    # bmt.print_rank("钩子注册成功")
     pretrain(args, tokenizer, model, optimizer, lr_scheduler)
 
 

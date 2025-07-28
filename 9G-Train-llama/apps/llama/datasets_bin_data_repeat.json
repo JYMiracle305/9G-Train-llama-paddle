@@ -1,12 +1,12 @@
 [
     {
-        "dataset_name": "bin_data_repeat",
+        "dataset_name": "optim_data2",
         "task_name": "instruction",
         "weight": 1.0,
-        "path": "../../data/metadata/quick_start/bin_data_repeat",
+        "path": "../../data/metadata/quick_start_ccnet/bin_data_repeat",
         "incontext_weight": [
             1.0
         ],
-        "transforms": "../../data/metadata/quick_start/transform_data.py"
+        "transforms": "../../data/metadata/quick_start_ccnet/transform_data.py"
     }
 ]

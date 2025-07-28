@@ -224,9 +224,9 @@ class _MixedDatasetBatchPacker:
         _sample_weight = _sample_weight / _sample_weight.sum()
         num_incontext = np.random.choice(_sample_weight.shape[0], p=_sample_weight)
         ds = config["dataset"]
-        #print("***************************")
-        #print(ds)
-        #print("***************************")
+        # print("***************************")
+        # print(ds)
+        # print("***************************")
         transforms = config["transforms"]
         if isinstance(transforms, str):
             if not os.path.exists(transforms):
@@ -260,7 +260,6 @@ class _MixedDatasetBatchPacker:
             raw_data["input"] = inp
             raw_data["samples"] = []
             break
-
         sample_ids = np.zeros(input_ids.shape, dtype=np.int32)
         i = 0
         while True:
